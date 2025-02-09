@@ -1,8 +1,9 @@
-const db = require('../../data/db-config');
+const Account = require('./accounts-model')
 
 exports.checkAccountPayload = (req, res, next) => {
   // Note: you can either write "manual" validation logic
   // or use the Yup library (not currently installed)
+  const errorMessage = { status: 400 }
   const { name, budget } = req.body;
 
   if (name === undefined || budget === undefined) {
@@ -19,27 +20,32 @@ exports.checkAccountPayload = (req, res, next) => {
   if (budgetNumber < 0 || budgetNumber > 1000000) {
     return res.status(400).json({ message: "budget of account is too larg or too small" });
   }
+  console.log('checkAccountPayload middleware')
   next();
 };
 
 
-exports.checkAccountNameUnique = async (req, res, next) => {
-  const { id } = req.params;
-  const account = await db('accounts').where({ id }).first();
-  if (!account) {
-    return res.status(404).json({ message: "account not found" });
-  }
-  req.account = account;
-  next(next);
+exports.checkAccountNameUnique = (req, res, next) => {
+  // const { id } = req.params;
+  // const account = await db('accounts').where({ id }).first();
+  // if (!account) {
+  //   return res.status(404).json({ message: "account not found" });
+  // }
+  // req.account = account;
+  console.log('checkAccountNameUnique middleware')
+  next();
 };
 
 exports.checkAccountId = async (req, res, next) => {
-  const { name } = req.body;
-  const trimmedName = name.trim();
-
-  const existingAccount = await db('accounts').where({ name: trimmedName }).first();
-  if (existingAccount) {
-    return res.status(400).json({ message: "that name is taken" });
+  try {
+    const account = await Account.getById(req.params.id)
+    if (!account) {
+      next({ status: 404, message: 'not found' })
+    } else {
+      req.account = account
+      next()
+    }
+  } catch (err) {
+    next(err)
   }
-  next();
 };
