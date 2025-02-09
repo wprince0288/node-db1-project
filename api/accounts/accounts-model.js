@@ -1,23 +1,27 @@
 const db = require('../../data/db-config');
 
-const getAll = () => db('accounts');
+async function getAll() {
+  return await db('accounts');
+}
 
-const getById = id => db('accounts').where('id', id).first();
+async function getById(id) {
+  return await db('accounts').where({ id }).first();
+}
 
-const create = async account => {
+async function create(account) {
   const [id] = await db('accounts').insert(account);
   return getById(id);
 }
 
-const updateById = async (id, account) => {
-  const updated = await db('accounts').where('id', id).update(account);
-  return updated ? getById(id) : null;
+async function updateById(id, changes) {
+  await db('accounts').where({ id }).update(changes);
+  return getById(id);
 }
 
-const deleteById = async id => {
+async function deleteById(id) {
   const account = await getById(id);
   if (account) {
-    await db('accounts').where('id', id).delete();
+    await db('accounts').where({ id }).delete();
   }
   return account;
 }
